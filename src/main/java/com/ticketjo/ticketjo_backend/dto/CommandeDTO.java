@@ -1,0 +1,73 @@
+package com.ticketjo.ticketjo_backend.dto;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
+
+/**
+ * Data Transfer Object (DTO) pour l'entité Commande. Utilisé pour transférer
+ * les données de commande sans exposer l'entité complète.
+ */
+
+public class CommandeDTO {
+
+	private Long idCommande;
+	
+	@PastOrPresent(message = "La date de commande ne peut pas être dans le futur")
+	private LocalDate dateCommande;
+	
+	@NotNull(message = "Le statut de la commande est obligatoire")
+    @Size(min = 3, max = 50, message = "Le statut doit contenir entre 3 et 50 caractères")
+	private String statut;
+	
+	@PositiveOrZero(message = "Le total de la commande ne peut pas être négatif")
+	private Double totalCommande;
+	
+	private List<TicketDTO> tickets;
+
+	// Getters & Setters
+
+	public Long getIdCommande() {
+		return idCommande;
+	}
+
+	public void setIdCommande(Long idCommande) {
+		this.idCommande = idCommande;
+	}
+
+	public LocalDate getDateCommande() {
+		return dateCommande;
+	}
+
+	public void setDateCommande(LocalDate dateCommande) {
+		this.dateCommande = dateCommande;
+	}
+
+	public String getStatut() {
+		return statut;
+	}
+
+	public void setStatut(String statut) {
+		this.statut = statut;
+	}
+
+	public Double getTotalCommande() {
+		return totalCommande;
+	}
+
+	public void setTotalCommande(Double totalCommande) {
+		this.totalCommande = totalCommande;
+	}
+
+	public List<TicketDTO> getTickets() {
+		return tickets;
+	}
+
+	public void setTickets(List<TicketDTO> tickets) {
+		this.tickets = tickets;
+	}
+}
