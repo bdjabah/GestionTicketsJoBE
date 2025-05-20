@@ -1,6 +1,6 @@
 package com.ticketjo.ticketjo_backend.service.impl;
-
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
@@ -42,5 +42,30 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public Ticket trouverTicketParCle(String cleTicket) {
         return ticketRepository.findByCleTicket(cleTicket);
+    }
+
+    @Override
+    public void supprimerTicket(Long idTicket) {
+        ticketRepository.deleteById(idTicket);
+    }
+
+    @Override
+    public Ticket mettreAJourTicket(Ticket ticket) {
+        Optional<Ticket> existingTicket = ticketRepository.findById(ticket.getIdTicket());
+        if (existingTicket.isPresent()) {
+            return ticketRepository.save(ticket); // Save = update si ID existe
+        } else {
+            throw new IllegalArgumentException("Ticket non trouvé avec l'ID : " + ticket.getIdTicket());
+        }
+    }
+
+    @Override
+    public List<Ticket> obtenirTousLesTickets() {
+        return ticketRepository.findAll();
+    }
+    
+    @Override
+    public Optional<Ticket> getTicketById(Long id) {
+        return ticketRepository.findById(id);
     }
 }

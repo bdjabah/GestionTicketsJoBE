@@ -1,8 +1,10 @@
 package com.ticketjo.ticketjo_backend.controller;
 
+
 import com.ticketjo.ticketjo_backend.dto.CommandeDTO;
 import com.ticketjo.ticketjo_backend.mapper.CommandeMapper;
 import com.ticketjo.ticketjo_backend.model.Commande;
+import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
 import com.ticketjo.ticketjo_backend.service.CommandeService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,6 +18,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class CommandeControllerTest {
@@ -36,16 +39,18 @@ class CommandeControllerTest {
         // Préparation du DTO d'entrée
         CommandeDTO dto = new CommandeDTO();
         dto.setDateCommande(LocalDate.now());
-        dto.setStatut("EN_ATTENTE");
-        dto.setTotalCommande(100.0);
+        // on passe l'enum, pas une String
+        dto.setStatut(StatutCommande.EN_ATTENTE_VALIDATION);
+        dto.setTotalCommande(150.0);
         dto.setTickets(Collections.emptyList());
 
         // Conversion en entité et simulation du service
         Commande toCreate = CommandeMapper.toEntity(dto);
         Commande created = new Commande();
-        created.setIdCommande(1L);
+        created.setIdCommande(100L);
         created.setDateCommande(toCreate.getDateCommande());
-        created.setStatutCommande(toCreate.getStatutCommande());
+        // idem ici
+        created.setStatutCommande(StatutCommande.EN_ATTENTE_VALIDATION);
         created.setTotalCommande(toCreate.getTotalCommande());
         when(commandeService.creerCommande(any(Commande.class))).thenReturn(created);
 
@@ -55,39 +60,42 @@ class CommandeControllerTest {
         // Assertions
         assertEquals(201, response.getStatusCodeValue());
         assertNotNull(response.getBody());
-        assertEquals(1L, response.getBody().getIdCommande());
-        assertEquals("EN_ATTENTE", response.getBody().getStatut());
-        assertEquals(100.0, response.getBody().getTotalCommande());
+        assertEquals(100L, response.getBody().getIdCommande());
+        // on compare des enums
+        assertEquals(StatutCommande.EN_ATTENTE_VALIDATION, response.getBody().getStatut());
+        assertEquals(150.0, response.getBody().getTotalCommande());
     }
 
     @Test
     void listerCommandesUtilisateur_shouldReturnList() {
-        Long userId = 42L;
+        Long userId = 7L;
         Commande cmd = new Commande();
         cmd.setIdCommande(2L);
-        cmd.setDateCommande(LocalDate.of(2025, 1, 1));
-        cmd.setStatutCommande("VALIDEE");
-        cmd.setTotalCommande(50.0);
+        cmd.setDateCommande(LocalDate.of(2025, 3, 15));
+        cmd.setStatutCommande(StatutCommande.EN_PREPARATION);
+        cmd.setTotalCommande(45.5);
         when(commandeService.listerCommandesUtilisateur(userId)).thenReturn(List.of(cmd));
 
         ResponseEntity<List<CommandeDTO>> response =
             commandeController.listerCommandesUtilisateur(userId);
 
         assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
-        CommandeDTO dto = response.getBody().get(0);
-        assertEquals(2L, dto.getIdCommande());
-        assertEquals("VALIDEE", dto.getStatut());
+        CommandeDTO returned = response.getBody().get(0);
+        assertEquals(2L, returned.getIdCommande());
+        assertEquals(StatutCommande.EN_PREPARATION, returned.getStatut());
+        assertEquals(45.5, returned.getTotalCommande());
     }
 
     @Test
     void obtenirDerniereCommandeUtilisateur_shouldReturnCommande_whenExists() {
-        Long userId = 42L;
+        Long userId = 8L;
         Commande cmd = new Commande();
-        cmd.setIdCommande(3L);
-        cmd.setDateCommande(LocalDate.of(2025, 2, 2));
-        cmd.setStatutCommande("LIVREE");
-        cmd.setTotalCommande(75.0);
+        cmd.setIdCommande(5L);
+        cmd.setDateCommande(LocalDate.of(2025, 4, 20));
+        cmd.setStatutCommande(StatutCommande.TERMINEE);
+        cmd.setTotalCommande(80.0);
         when(commandeService.obtenirDerniereCommandeUtilisateur(userId)).thenReturn(cmd);
 
         ResponseEntity<CommandeDTO> response =
@@ -95,8 +103,8 @@ class CommandeControllerTest {
 
         assertEquals(200, response.getStatusCodeValue());
         assertNotNull(response.getBody());
-        assertEquals(3L, response.getBody().getIdCommande());
-        assertEquals("LIVREE", response.getBody().getStatut());
+        assertEquals(5L, response.getBody().getIdCommande());
+        assertEquals(StatutCommande.TERMINEE, response.getBody().getStatut());
     }
 
     @Test
@@ -113,19 +121,43 @@ class CommandeControllerTest {
 
     @Test
     void listerCommandesParStatut_shouldReturnList() {
-        String statut = "EN_ATTENTE";
+        StatutCommande statut = StatutCommande.EN_COURS;
         Commande cmd = new Commande();
         cmd.setIdCommande(4L);
         cmd.setDateCommande(LocalDate.now());
         cmd.setStatutCommande(statut);
         cmd.setTotalCommande(30.0);
-        when(commandeService.listerCommandesParStatut(statut)).thenReturn(List.of(cmd));
+        when(commandeService.listerCommandesParStatut(statut.name())).thenReturn(List.of(cmd));
 
         ResponseEntity<List<CommandeDTO>> response =
-            commandeController.listerCommandesParStatut(statut);
+            commandeController.listerCommandesParStatut(statut.name());
 
         assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
         assertEquals(1, response.getBody().size());
         assertEquals(statut, response.getBody().get(0).getStatut());
+    }
+
+    @Test
+    void changerStatut_shouldReturnUpdatedCommande() {
+        Long commandeId = 15L;
+        StatutCommande nouveauStatut = StatutCommande.ANNULEE;
+
+        Commande updated = new Commande();
+        updated.setIdCommande(commandeId);
+        updated.setDateCommande(LocalDate.of(2025, 5, 1));
+        updated.setStatutCommande(nouveauStatut);
+        updated.setTotalCommande(200.0);
+        when(commandeService.changerStatut(eq(commandeId), eq(nouveauStatut)))
+            .thenReturn(updated);
+
+        ResponseEntity<CommandeDTO> response =
+            commandeController.changerStatut(commandeId, nouveauStatut);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertNotNull(response.getBody());
+        assertEquals(commandeId, response.getBody().getIdCommande());
+        assertEquals(nouveauStatut, response.getBody().getStatut());
+        assertEquals(200.0, response.getBody().getTotalCommande());
     }
 }

@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import java.time.LocalDate;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,10 +24,11 @@ public class Ticket {
 
     private String typeTicket;
     private double prixTicket;
-    private LocalDate dateEvenement;
+    private Integer stock;
     private String cleTicket;
     private String qrCode;
     private String statutTicket;
+    private String imageTicket;
 
     @ManyToOne
     @JoinColumn(name = "commandeId")
@@ -37,6 +37,6 @@ public class Ticket {
     @ManyToOne
     @JoinColumn(name = "evenementId")
     private Evenement evenement;
-
-    // Getters & Setters
+ // Getters & Setters
 }
+    

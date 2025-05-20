@@ -3,6 +3,7 @@ package com.ticketjo.ticketjo_backend.controller;
 import com.ticketjo.ticketjo_backend.dto.UtilisateurDTO;
 import com.ticketjo.ticketjo_backend.mapper.UtilisateurMapper;
 import com.ticketjo.ticketjo_backend.model.Utilisateur;
+import com.ticketjo.ticketjo_backend.security.JwtUtil;
 import com.ticketjo.ticketjo_backend.service.UtilisateurService;
 
 import jakarta.validation.Valid;
@@ -13,13 +14,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-
 @RestController
 @RequestMapping("/api/utilisateurs")
 @RequiredArgsConstructor
 public class UtilisateurController {
 
 	private final UtilisateurService utilisateurService;
+	private final JwtUtil jwtUtil;
 
 	/**
 	 * Crée un nouvel utilisateur à partir d'un DTO validé. La méthode utilise un
@@ -68,13 +69,31 @@ public class UtilisateurController {
 	 *
 	 * @return Une liste d'utilisateurs avec un statut HTTP 200 (OK).
 	 */
-	
+
 	@GetMapping
 	public ResponseEntity<List<UtilisateurDTO>> getAllUtilisateurs() {
-	    List<UtilisateurDTO> utilisateurs = utilisateurService.getAllUtilisateurs()
-	            .stream()
-	            .map(UtilisateurMapper::toDTO)
-	            .toList(); // Java 16+ version
-	    return new ResponseEntity<>(utilisateurs, HttpStatus.OK);
+		List<UtilisateurDTO> utilisateurs = utilisateurService.getAllUtilisateurs().stream()
+				.map(UtilisateurMapper::toDTO).toList(); // Java 16+ version
+		return new ResponseEntity<>(utilisateurs, HttpStatus.OK);
+	}
+
+	/**
+	 * Récupère l'utilisateur actuellement connecté à partir du token JWT.
+	 *
+	 * @param authHeader L'en-tête Authorization contenant le token JWT.
+	 * @return L'utilisateur correspondant, ou 404 si non trouvé.
+	 */
+	@GetMapping("/me")
+	public ResponseEntity<UtilisateurDTO> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
+		// Supprimer le préfixe "Bearer " pour obtenir le token brut
+		String token = authHeader.replace("Bearer ", "");
+
+		// Extraire l'email depuis le token
+		String email = jwtUtil.extractEmail(token);
+
+		// Rechercher l'utilisateur via l'email
+		return utilisateurService.getUtilisateurByEmail(email).map(UtilisateurMapper::toDTO)
+				.map(dto -> new ResponseEntity<>(dto, HttpStatus.OK))
+				.orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
 	}
 }

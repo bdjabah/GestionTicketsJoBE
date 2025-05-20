@@ -173,6 +173,15 @@
 					</excludes>
 				</configuration>
 			</plugin>
+			<plugin>
+				<groupId>org.flywaydb</groupId>
+				<artifactId>flyway-maven-plugin</artifactId>
+				<configuration>
+					<url>jdbc:postgresql://localhost:5432/ticketjo_bd</url>
+					<user>fatou</user>
+					<password>fatou123</password>
+				</configuration>
+			</plugin>
 
 			<!-- Plugin pour gérer les ressources avec encodage UTF-8 -->
 			<plugin>

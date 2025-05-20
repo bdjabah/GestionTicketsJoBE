@@ -45,4 +45,26 @@ public class PaiementServiceImpl implements PaiementService {
 	public List<Paiement> listerPaiementsUtilisateur(Long idUtilisateur) {
 		return paiementRepository.findByCommande_Utilisateur_IdUtilisateur(idUtilisateur);
 	}
+	@Override
+	public void marquerPaiementValide(String paymentIntentId) {
+		Paiement paiement = paiementRepository.findByPaymentIntentId(paymentIntentId);
+		if (paiement != null) {
+			paiement.setStatut(StatutPaiement.VALIDE);
+			paiementRepository.save(paiement);
+		}
+	}
+
+	@Override
+	public void marquerPaiementEchoue(String paymentIntentId) {
+		Paiement paiement = paiementRepository.findByPaymentIntentId(paymentIntentId);
+		if (paiement != null) {
+			paiement.setStatut(StatutPaiement.ECHOUE);
+			paiementRepository.save(paiement);
+		}
+	}
+	
+	@Override
+	public Paiement trouverParIntentId(String intentId) {
+	    return paiementRepository.findByPaymentIntentId(intentId);
+	}
 }

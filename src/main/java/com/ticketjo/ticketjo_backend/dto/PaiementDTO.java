@@ -30,7 +30,10 @@ public class PaiementDTO {
 	@NotNull(message = "L'identifiant de la commande est obligatoire")
 	private Long idCommande; // pour lier au DTO de Commande si besoin
 
+	 private String paymentIntentId; 
 	// Getters & Setters
+
+	
 
 	public Long getIdPaiement() {
 		return idPaiement;
@@ -78,5 +81,12 @@ public class PaiementDTO {
 
 	public void setIdCommande(Long idCommande) {
 		this.idCommande = idCommande;
+	}
+	public String getPaymentIntentId() {
+		return paymentIntentId;
+	}
+
+	public void setPaymentIntentId(String paymentIntentId) {
+		this.paymentIntentId = paymentIntentId;
 	}
 }

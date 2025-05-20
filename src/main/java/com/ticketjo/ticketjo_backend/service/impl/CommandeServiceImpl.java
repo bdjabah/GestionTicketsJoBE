@@ -8,6 +8,7 @@ import com.ticketjo.ticketjo_backend.model.Commande;
 import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
 import com.ticketjo.ticketjo_backend.repository.CommandeRepository;
 import com.ticketjo.ticketjo_backend.service.CommandeService;
+import jakarta.persistence.EntityNotFoundException;
 
 @Service
 public class CommandeServiceImpl implements CommandeService {
@@ -37,5 +38,12 @@ public class CommandeServiceImpl implements CommandeService {
 	public List<Commande> listerCommandesParStatut(String statutCommande) {
 		StatutCommande statut = StatutCommande.valueOf(statutCommande.toUpperCase()); // convertit la String en Enum
 		return commandeRepository.findByStatutCommande(statut);
+	}
+	@Override
+	public Commande changerStatut(Long idCommande, StatutCommande nouveauStatut) {
+	    Commande cmd = commandeRepository.findById(idCommande)
+	        .orElseThrow(() -> new EntityNotFoundException("Commande non trouvée : " + idCommande));
+	    cmd.setStatutCommande(nouveauStatut);
+	    return commandeRepository.save(cmd);
 	}
 }

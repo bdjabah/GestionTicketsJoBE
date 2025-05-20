@@ -1,6 +1,5 @@
 package com.ticketjo.ticketjo_backend.model;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -11,7 +10,6 @@ import java.util.List;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,7 +23,7 @@ public class Utilisateur {
 	@Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idUtilisateur;
-	@Column(name = "cle_utilisateur", nullable = false, unique = true)
+	@Column(name = "cleutilisateur", nullable = false, unique = true)
 	private String cleUtilisateur;
     private String nom;
     private String prenom;
@@ -38,9 +36,6 @@ public class Utilisateur {
     @ManyToOne
     @JoinColumn(name = "roleId")
     private Role role;
-
-    @OneToOne(mappedBy = "utilisateur", cascade = CascadeType.ALL)
-    private Panier panier;
 
     @OneToMany(mappedBy = "utilisateur")
     private List<Commande> commandes;

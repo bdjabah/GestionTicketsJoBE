@@ -1,104 +1,185 @@
 package com.ticketjo.ticketjo_backend.controller;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.ticketjo.ticketjo_backend.dto.TicketDTO;
-import com.ticketjo.ticketjo_backend.model.Commande;
-import com.ticketjo.ticketjo_backend.model.Evenement;
 import com.ticketjo.ticketjo_backend.model.Ticket;
 import com.ticketjo.ticketjo_backend.service.TicketService;
-import com.ticketjo.ticketjo_backend.mapper.TicketMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.time.LocalDate;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
+import com.ticketjo.ticketjo_backend.model.Commande;
+import com.ticketjo.ticketjo_backend.model.Evenement;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-class TicketControllerTest {
+import java.util.List;
+public class TicketControllerTest {
 
-    private final TicketService ticketService = mock(TicketService.class);
-    private final TicketController controller = new TicketController(ticketService);
+    // Dépendances simulées (mockées)
+    private TicketController controller;
+    private TicketService ticketService;
+    private ObjectMapper objectMapper;
 
-    private Ticket getSampleTicket() {
-        Ticket ticket = new Ticket();
-        ticket.setIdTicket(1L);
-        ticket.setCleTicket("cle1234567890");
-        ticket.setQrCode("qrcode123");
-        ticket.setTypeTicket("VIP");
-        ticket.setPrixTicket(150.0);
-        ticket.setDateEvenement(LocalDate.now());
-        return ticket;
+    @BeforeEach
+    public void setup() {
+        // Initialisation des mocks et du contrôleur avant chaque test
+        ticketService = mock(TicketService.class);
+        objectMapper = new ObjectMapper();
+        controller = new TicketController(ticketService, objectMapper);
     }
 
     @Test
-    void testCreateTicket() {
-        Ticket ticket = getSampleTicket();
-        when(ticketService.creerTicket(any())).thenReturn(ticket);
+    public void testCreateTicketSansImage() throws Exception {
+        // Préparation des données d'entrée (DTO simulé)
+        TicketDTO dto = new TicketDTO();
+        dto.setTypeTicket("VIP");
+        dto.setPrixTicket(150.0);
+        dto.setStock(100);
+        dto.setCleTicket("CLE123456789");
+        dto.setQrCode("QR123456789");
+        dto.setIdCommande(1L);
+        dto.setIdEvenement(2L);
 
-        TicketDTO dto = TicketMapper.toDTO(ticket);
-        ResponseEntity<TicketDTO> response = controller.createTicket(dto);
+        // Réponse simulée du service (Ticket simulé)
+        Ticket fakeTicket = new Ticket();
+        fakeTicket.setTypeTicket("VIP");
+        fakeTicket.setPrixTicket(150.0);
+        fakeTicket.setStock(100);
+        fakeTicket.setCleTicket("CLE123456789");
+        fakeTicket.setQrCode("QR123456789");
+        when(ticketService.creerTicket(any())).thenReturn(fakeTicket);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
-        assertEquals("cle1234567890", response.getBody().getCleTicket());
+        // Conversion du DTO en JSON comme attendu dans la requête multipart
+        String json = objectMapper.writeValueAsString(dto);
+
+        // Appel du contrôleur avec une image nulle (test sans image)
+        ResponseEntity<TicketDTO> response = controller.createTicket(json, null);
+
+        // Assertions sur le statut HTTP et la réponse
+        assertEquals(201, response.getStatusCodeValue());
+        assertEquals("VIP", response.getBody().getTypeTicket());
     }
 
     @Test
-    void testGetTicketsByCommande() {
+    public void testDeleteTicket() {
+        // Simule une suppression sans erreur
+        doNothing().when(ticketService).supprimerTicket(1L);
+
+        // Appel du contrôleur
+        ResponseEntity<Void> response = controller.deleteTicket(1L);
+
+        // Vérifie le statut HTTP et que la méthode a bien été appelée
+        assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+        verify(ticketService, times(1)).supprimerTicket(1L);
+    }
+
+    @Test
+    public void testGetTicketsByCommande() {
+        // Préparation d'une commande et d'un ticket fictif
         Commande commande = new Commande();
-        commande.setIdCommande(10L);
-        Ticket ticket = getSampleTicket();
+        commande.setIdCommande(1L);
+        Ticket ticket = new Ticket();
+        ticket.setTypeTicket("STANDARD");
+
+        // Simule la réponse du service
         when(ticketService.obtenirTicketsParCommande(any())).thenReturn(List.of(ticket));
 
-        ResponseEntity<List<TicketDTO>> response = controller.getTicketsByCommande(10L);
+        // Appel du contrôleur
+        ResponseEntity<List<TicketDTO>> response = controller.getTicketsByCommande(1L);
 
+        // Vérification de la réponse
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(1, response.getBody().size());
+        assertEquals("STANDARD", response.getBody().get(0).getTypeTicket());
     }
 
     @Test
-    void testGetTicketsByUtilisateur() {
-        Ticket ticket = getSampleTicket();
-        when(ticketService.obtenirTicketsParUtilisateur(5L)).thenReturn(List.of(ticket));
+    public void testGetTicketsByUtilisateur() {
+        // Ticket fictif lié à un utilisateur
+        Ticket ticket = new Ticket();
+        ticket.setTypeTicket("VIP");
 
-        ResponseEntity<List<TicketDTO>> response = controller.getTicketsByUtilisateur(5L);
+        // Simule le retour du service
+        when(ticketService.obtenirTicketsParUtilisateur(2L)).thenReturn(List.of(ticket));
 
+        // Appel du contrôleur
+        ResponseEntity<List<TicketDTO>> response = controller.getTicketsByUtilisateur(2L);
+
+        // Vérification du résultat
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("cle1234567890", response.getBody().get(0).getCleTicket());
+        assertEquals(1, response.getBody().size());
+        assertEquals("VIP", response.getBody().get(0).getTypeTicket());
     }
 
     @Test
-    void testGetTicketsByEvenement() {
+    public void testGetTicketsByEvenement() {
+        // Événement fictif
         Evenement evenement = new Evenement();
         evenement.setIdEvenement(3L);
-        Ticket ticket = getSampleTicket();
+
+        // Ticket fictif lié à l'événement
+        Ticket ticket = new Ticket();
+        ticket.setTypeTicket("PREMIUM");
+
+        // Simule la réponse du service
         when(ticketService.obtenirTicketsParEvenement(any())).thenReturn(List.of(ticket));
 
+        // Appel du contrôleur
         ResponseEntity<List<TicketDTO>> response = controller.getTicketsByEvenement(3L);
 
+        // Vérification de la réponse
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertFalse(response.getBody().isEmpty());
+        assertEquals("PREMIUM", response.getBody().get(0).getTypeTicket());
     }
 
     @Test
-    void testGetTicketByCle_Found() {
-        Ticket ticket = getSampleTicket();
-        when(ticketService.trouverTicketParCle("cle1234567890")).thenReturn(ticket);
+    public void testGetTicketByCle_found() {
+        // Ticket fictif avec clé valide
+        Ticket ticket = new Ticket();
+        ticket.setCleTicket("ABC1234567");
+        ticket.setTypeTicket("VIP");
 
-        ResponseEntity<TicketDTO> response = controller.getTicketByCle("cle1234567890");
+        // Simule la recherche réussie
+        when(ticketService.trouverTicketParCle("ABC1234567")).thenReturn(ticket);
 
+        // Appel du contrôleur
+        ResponseEntity<TicketDTO> response = controller.getTicketByCle("ABC1234567");
+
+        // Vérification de la réponse
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("VIP", response.getBody().getTypeTicket());
     }
 
     @Test
-    void testGetTicketByCle_NotFound() {
-        when(ticketService.trouverTicketParCle("absent")).thenReturn(null);
+    public void testGetTicketByCle_notFound() {
+        // Simule une recherche infructueuse
+        when(ticketService.trouverTicketParCle("INVALID")).thenReturn(null);
 
-        ResponseEntity<TicketDTO> response = controller.getTicketByCle("absent");
+        // Appel du contrôleur
+        ResponseEntity<TicketDTO> response = controller.getTicketByCle("INVALID");
 
+        // Vérifie que la réponse est bien 404
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
+
+    @Test
+    public void testGetAllTickets() {
+        // Ticket fictif
+        Ticket ticket = new Ticket();
+        ticket.setTypeTicket("VIP");
+
+        // Simule la récupération de tous les tickets
+        when(ticketService.obtenirTousLesTickets()).thenReturn(List.of(ticket));
+
+        // Appel du contrôleur
+        ResponseEntity<List<TicketDTO>> response = controller.getAllTickets();
+
+        // Vérification du contenu et du statut
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(1, response.getBody().size());
+        assertEquals("VIP", response.getBody().get(0).getTypeTicket());
+    }
+
 }

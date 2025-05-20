@@ -24,6 +24,7 @@ public class PaiementMapper {
                 ? paiement.getCommande().getIdCommande()
                 : null
         );
+        dto.setPaymentIntentId(paiement.getPaymentIntentId());
         return dto;
     }
 
@@ -42,6 +43,7 @@ public class PaiementMapper {
             commande.setIdCommande(dto.getIdCommande());
             paiement.setCommande(commande);
         }
+        paiement.setPaymentIntentId(dto.getPaymentIntentId());
         return paiement;
     }
 }

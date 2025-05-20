@@ -1,19 +1,27 @@
 package com.ticketjo.ticketjo_backend.controller;
 
+import com.ticketjo.ticketjo_backend.config.StripeProperties;
 import com.ticketjo.ticketjo_backend.dto.PaiementDTO;
 import com.ticketjo.ticketjo_backend.mapper.PaiementMapper;
 import com.ticketjo.ticketjo_backend.model.Paiement;
 import com.ticketjo.ticketjo_backend.model.enums.StatutPaiement;
 import com.ticketjo.ticketjo_backend.service.PaiementService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.io.IOException;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
+import com.stripe.model.PaymentIntent;
+import com.stripe.net.Webhook;
+import com.stripe.model.Event;
 /**
  * Contrôleur REST pour la gestion des paiements.
  */
@@ -23,7 +31,7 @@ import java.util.List;
 public class PaiementController {
 
 	private final PaiementService paiementService;
-
+	 private final StripeProperties stripeProperties;
 	/**
 	 * Crée un nouveau paiement.
 	 * 
@@ -64,7 +72,46 @@ public class PaiementController {
 				.map(PaiementMapper::toDTO).toList();
 		return new ResponseEntity<>(paiements, HttpStatus.OK);
 	}
+	@PostMapping("/webhook")
+	public ResponseEntity<String> handleStripeWebhook(HttpServletRequest request) throws IOException {
+	    String payload = request.getReader().lines().collect(Collectors.joining());
+	    String sigHeader = request.getHeader("Stripe-Signature");
 
+	    if (sigHeader == null) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Signature header manquant");
+	    }
+
+	    Event event;
+	    try {
+	        event = Webhook.constructEvent(payload, sigHeader, stripeProperties.getWebhookSecret());
+	    } catch (Exception e) {
+	        System.out.println("❌ Signature Stripe invalide : " + e.getMessage());
+	        return ResponseEntity.badRequest().body("Signature invalide");
+	    }
+
+	    System.out.println("✅ Webhook Stripe reçu : " + event.getType());
+
+	    PaymentIntent intent = (PaymentIntent) event.getDataObjectDeserializer().getObject().orElse(null);
+
+	    if (intent == null) {
+	        System.out.println("❌ Échec de la désérialisation du PaymentIntent.");
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Erreur de parsing");
+	    }
+
+	    switch (event.getType()) {
+	        case "payment_intent.succeeded":
+	            paiementService.marquerPaiementValide(intent.getId());
+	            break;
+	        case "payment_intent.payment_failed":
+	            paiementService.marquerPaiementEchoue(intent.getId());
+	            break;
+	        default:
+	            System.out.println("⚠️ Événement Stripe non traité : " + event.getType());
+	            break;
+	    }
+
+	    return ResponseEntity.ok("✅ Webhook traité");
+	}
 	/**
 	 * Récupère tous les paiements d'un utilisateur donné.
 	 * 
@@ -76,5 +123,14 @@ public class PaiementController {
 		List<PaiementDTO> paiements = paiementService.listerPaiementsUtilisateur(idUtilisateur).stream()
 				.map(PaiementMapper::toDTO).toList();
 		return new ResponseEntity<>(paiements, HttpStatus.OK);
+	}
+	
+	@GetMapping("/intent/{intentId}")
+	public ResponseEntity<PaiementDTO> getPaiementByIntentId(@PathVariable String intentId) {
+	    Paiement paiement = paiementService.trouverParIntentId(intentId);
+	    if (paiement == null) {
+	        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+	    }
+	    return new ResponseEntity<>(PaiementMapper.toDTO(paiement), HttpStatus.OK);
 	}
 }

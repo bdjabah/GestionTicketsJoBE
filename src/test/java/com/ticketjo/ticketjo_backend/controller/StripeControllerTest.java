@@ -1,5 +1,4 @@
 package com.ticketjo.ticketjo_backend.controller;
-
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.ticketjo.ticketjo_backend.service.StripeService;
@@ -17,6 +16,12 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * ✅ Tests unitaires du StripeController
+ * - simulateur de paiement réussi
+ * - erreur Stripe (serveur)
+ * - erreur utilisateur (mauvaise donnée)
+ */
 class StripeControllerTest {
 
     @Mock
@@ -41,8 +46,7 @@ class StripeControllerTest {
         request.put("amount", 42.50);
 
         // WHEN
-        ResponseEntity<Map<String, String>> response =
-            stripeController.createPaymentIntent(request);
+        ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
 
         // THEN
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -53,17 +57,15 @@ class StripeControllerTest {
 
     @Test
     void createPaymentIntent_shouldReturn500_onStripeException() throws Exception {
-        // GIVEN : mock d'une StripeException
-        StripeException stripeEx = mock(StripeException.class);
+        // GIVEN
         when(stripeService.createPaymentIntent(anyDouble()))
-            .thenThrow(stripeEx);
+                .thenThrow(mock(StripeException.class));
 
         Map<String, Object> request = new HashMap<>();
         request.put("amount", 10);
 
         // WHEN
-        ResponseEntity<Map<String, String>> response =
-            stripeController.createPaymentIntent(request);
+        ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
 
         // THEN
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
@@ -73,13 +75,12 @@ class StripeControllerTest {
 
     @Test
     void createPaymentIntent_shouldReturn400_onInvalidAmount() {
-        // GIVEN : un montant non convertible en Double
+        // GIVEN
         Map<String, Object> request = new HashMap<>();
         request.put("amount", "pas un nombre");
 
         // WHEN
-        ResponseEntity<Map<String, String>> response =
-            stripeController.createPaymentIntent(request);
+        ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
 
         // THEN
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());

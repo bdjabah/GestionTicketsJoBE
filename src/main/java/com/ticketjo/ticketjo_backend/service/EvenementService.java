@@ -7,13 +7,41 @@ import com.ticketjo.ticketjo_backend.model.Evenement;
 
 public interface EvenementService {
 
-	Evenement creerEvenement(Evenement evenement); // Créer un événement
+	 Evenement creerEvenement(Evenement evenement);
 
-	List<Evenement> rechercherParNom(String nomEvenement); // Rechercher par nom
+	    /**
+	     * Met à jour un événement existant.
+	     */
+	    Evenement updateEvenement(Evenement evenement);
 
-	List<Evenement> rechercherParDiscipline(String discipline); // Rechercher par discipline
+	    /**
+	     * Supprime un événement par son ID.
+	     */
+	    void supprimerEvenement(Long id);
 
-	List<Evenement> rechercherParDate(LocalDate dateEvenement); // Rechercher par date
+	    /**
+	     * Récupère tous les événements.
+	     */
+	    List<Evenement> getAllEvenements();
 
-	List<Evenement> rechercherParLieu(String lieuEvenement); // Rechercher par lieu
+	    /**
+	     * Recherche par nom d'événement.
+	     */
+	    List<Evenement> rechercherParNom(String nomEvenement);
+
+	    /**
+	     * Recherche par discipline.
+	     */
+	    List<Evenement> rechercherParDiscipline(String discipline);
+
+	    /**
+	     * Recherche par date.
+	     */
+	    List<Evenement> rechercherParDate(LocalDate dateEvenement);
+
+	    /**
+	     * Recherche par lieu.
+	     */
+	    List<Evenement> rechercherParLieu(String lieuEvenement);
+
 }

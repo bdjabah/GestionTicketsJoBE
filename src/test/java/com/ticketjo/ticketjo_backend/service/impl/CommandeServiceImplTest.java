@@ -33,7 +33,8 @@ class CommandeServiceImplTest {
         commande = new Commande();
         commande.setIdCommande(1L);
         commande.setDateCommande(LocalDate.now());
-        commande.setStatutCommande("TERMINEE"); // reste une chaîne ici
+        // on passe l'enum, pas une String
+        commande.setStatutCommande(StatutCommande.TERMINEE);
     }
 
     @Test
@@ -43,14 +44,15 @@ class CommandeServiceImplTest {
         Commande result = commandeService.creerCommande(commande);
 
         assertNotNull(result);
-        assertEquals("TERMINEE", result.getStatutCommande());
+        assertEquals(StatutCommande.TERMINEE, result.getStatutCommande());
         verify(commandeRepository).save(commande);
     }
 
     @Test
     void testListerCommandesUtilisateur() {
         Long idUtilisateur = 2L;
-        when(commandeRepository.findByUtilisateur_IdUtilisateur(idUtilisateur)).thenReturn(List.of(commande));
+        when(commandeRepository.findByUtilisateur_IdUtilisateur(idUtilisateur))
+            .thenReturn(List.of(commande));
 
         List<Commande> commandes = commandeService.listerCommandesUtilisateur(idUtilisateur);
 
@@ -62,25 +64,27 @@ class CommandeServiceImplTest {
     void testObtenirDerniereCommandeUtilisateur() {
         Long idUtilisateur = 2L;
         when(commandeRepository.findTopByUtilisateur_IdUtilisateurOrderByDateCommandeDesc(idUtilisateur))
-                .thenReturn(Optional.of(commande));
+            .thenReturn(Optional.of(commande));
 
         Commande result = commandeService.obtenirDerniereCommandeUtilisateur(idUtilisateur);
 
         assertNotNull(result);
         assertEquals(commande, result);
-        verify(commandeRepository).findTopByUtilisateur_IdUtilisateurOrderByDateCommandeDesc(idUtilisateur);
+        verify(commandeRepository)
+            .findTopByUtilisateur_IdUtilisateurOrderByDateCommandeDesc(idUtilisateur);
     }
 
     @Test
     void testListerCommandesParStatut() {
-        StatutCommande statut = StatutCommande.valueOf("TERMINEE");
+        // on stubbe le repo avec l'enum
+        when(commandeRepository.findByStatutCommande(StatutCommande.TERMINEE))
+            .thenReturn(List.of(commande));
 
-        when(commandeRepository.findByStatutCommande(statut))
-                .thenReturn(List.of(commande));
-
+        // on appelle la méthode service en passant une String (case-insensitive)
         List<Commande> result = commandeService.listerCommandesParStatut("terminee");
 
         assertEquals(1, result.size());
-        verify(commandeRepository).findByStatutCommande(statut);
+        // s'assure que l'on a bien converti en StatutCommande.TERMINEE
+        verify(commandeRepository).findByStatutCommande(StatutCommande.TERMINEE);
     }
 }

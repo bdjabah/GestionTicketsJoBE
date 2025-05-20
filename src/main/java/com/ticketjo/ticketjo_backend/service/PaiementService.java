@@ -14,4 +14,13 @@ public interface PaiementService {
     List<Paiement> listerPaiementsParStatut(StatutPaiement statut); // Lister paiements par statut
 
     List<Paiement> listerPaiementsUtilisateur(Long idUtilisateur); // Lister tous les paiements d'un utilisateur
+    
+    // Ajouté pour le webhook Stripe
+    void marquerPaiementValide(String paymentIntentId);
+
+    void marquerPaiementEchoue(String paymentIntentId);
+    
+    Paiement trouverParIntentId(String intentId);
+    
+    
 }

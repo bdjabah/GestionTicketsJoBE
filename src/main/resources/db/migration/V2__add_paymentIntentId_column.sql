@@ -1,0 +1,1 @@
+ALTER TABLE paiement ADD COLUMN IF NOT EXISTS paymentintentid VARCHAR(255);

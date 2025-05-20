@@ -4,6 +4,7 @@ import com.ticketjo.ticketjo_backend.dto.RoleDTO;
 import com.ticketjo.ticketjo_backend.dto.UtilisateurDTO;
 import com.ticketjo.ticketjo_backend.mapper.UtilisateurMapper;
 import com.ticketjo.ticketjo_backend.model.Utilisateur;
+import com.ticketjo.ticketjo_backend.security.JwtUtil;
 import com.ticketjo.ticketjo_backend.service.UtilisateurService;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,8 @@ import static org.mockito.Mockito.*;
 class UtilisateurControllerTest {
 
     private final UtilisateurService utilisateurService = mock(UtilisateurService.class);
-    private final UtilisateurController controller = new UtilisateurController(utilisateurService);
+    private final JwtUtil jwtUtil = mock(JwtUtil.class); // Mock du JwtUtil
+    private final UtilisateurController controller = new UtilisateurController(utilisateurService, jwtUtil);
 
     @Test
     void testCreateUtilisateur() {
@@ -98,5 +100,23 @@ class UtilisateurControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(2, response.getBody().size());
+    }
+
+    @Test
+    void testGetCurrentUser() {
+        String token = "Bearer faketoken";
+        String fakeEmail = "jean@example.com";
+
+        Utilisateur utilisateur = new Utilisateur();
+        utilisateur.setNom("Jean");
+        utilisateur.setEmail(fakeEmail);
+
+        when(jwtUtil.extractEmail("faketoken")).thenReturn(fakeEmail);
+        when(utilisateurService.getUtilisateurByEmail(fakeEmail)).thenReturn(Optional.of(utilisateur));
+
+        ResponseEntity<UtilisateurDTO> response = controller.getCurrentUser(token);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Jean", response.getBody().getNom());
     }
 }

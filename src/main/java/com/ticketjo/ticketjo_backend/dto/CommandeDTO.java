@@ -3,6 +3,8 @@ package com.ticketjo.ticketjo_backend.dto;
 import java.time.LocalDate;
 import java.util.List;
 
+import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
+
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -22,7 +24,7 @@ public class CommandeDTO {
 	
 	@NotNull(message = "Le statut de la commande est obligatoire")
     @Size(min = 3, max = 50, message = "Le statut doit contenir entre 3 et 50 caractères")
-	private String statut;
+	private StatutCommande statut;
 	
 	@PositiveOrZero(message = "Le total de la commande ne peut pas être négatif")
 	private Double totalCommande;
@@ -47,13 +49,14 @@ public class CommandeDTO {
 		this.dateCommande = dateCommande;
 	}
 
-	public String getStatut() {
+	public StatutCommande getStatut() {
 		return statut;
 	}
 
-	public void setStatut(String statut) {
+	public void setStatut(StatutCommande statut) {
 		this.statut = statut;
 	}
+
 
 	public Double getTotalCommande() {
 		return totalCommande;

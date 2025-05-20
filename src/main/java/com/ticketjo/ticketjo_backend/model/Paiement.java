@@ -30,6 +30,7 @@ public class Paiement {
     private double montantPaiement;
     private LocalDate datePaiement;
     private String methodePaiement;
+    private String paymentIntentId; // Permet de relier Stripe à
   
     @OneToOne
     @JoinColumn(name = "commandeId")

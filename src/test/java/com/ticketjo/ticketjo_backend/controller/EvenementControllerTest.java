@@ -1,5 +1,4 @@
 package com.ticketjo.ticketjo_backend.controller;
-
 import com.ticketjo.ticketjo_backend.dto.EvenementDTO;
 import com.ticketjo.ticketjo_backend.model.Evenement;
 import com.ticketjo.ticketjo_backend.service.EvenementService;
@@ -12,7 +11,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.ResponseEntity;
 
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -33,7 +31,7 @@ class EvenementControllerTest {
 
     @Test
     void creerEvenement_shouldReturnCreatedEvenement() {
-        EvenementDTO dto = new EvenementDTO(null, "Marathon", "Sport", LocalDate.now(), "Paris", "Course à pied");
+        EvenementDTO dto = new EvenementDTO(null, "Marathon", "Sport", LocalDate.now(), "Paris", "Course à pied", "marathon.jpg");
 
         Evenement entity = EvenementMapper.toEntity(dto);
         entity.setIdEvenement(1L);
@@ -45,12 +43,13 @@ class EvenementControllerTest {
         assertEquals(201, response.getStatusCodeValue());
         assertNotNull(response.getBody());
         assertEquals("Marathon", response.getBody().getNomEvenement());
+        assertEquals("marathon.jpg", response.getBody().getImageUrl());
     }
 
     @Test
     void rechercherParNom_shouldReturnMatchingEvents() {
         String nom = "Marathon";
-        Evenement evenement = new Evenement(1L, nom, "Sport", LocalDate.now(), "Paris", "Compétition");
+        Evenement evenement = new Evenement(1L, nom, "Sport", LocalDate.now(), "Paris", "Compétition", "img1.jpg");
         when(evenementService.rechercherParNom(nom)).thenReturn(List.of(evenement));
 
         ResponseEntity<List<EvenementDTO>> response = evenementController.rechercherParNom(nom);
@@ -58,12 +57,13 @@ class EvenementControllerTest {
         assertEquals(200, response.getStatusCodeValue());
         assertEquals(1, response.getBody().size());
         assertEquals(nom, response.getBody().get(0).getNomEvenement());
+        assertEquals("img1.jpg", response.getBody().get(0).getImageUrl());
     }
 
     @Test
     void rechercherParDiscipline_shouldReturnMatchingEvents() {
         String discipline = "Musique";
-        Evenement event = new Evenement(2L, "Festival", discipline, LocalDate.now(), "Lyon", null);
+        Evenement event = new Evenement(2L, "Festival", discipline, LocalDate.now(), "Lyon", null, null);
         when(evenementService.rechercherParDiscipline(discipline)).thenReturn(List.of(event));
 
         ResponseEntity<List<EvenementDTO>> response = evenementController.rechercherParDiscipline(discipline);
@@ -78,7 +78,7 @@ class EvenementControllerTest {
         LocalDate date = LocalDate.of(2025, 5, 6);
         String dateStr = date.toString();
 
-        Evenement event = new Evenement(3L, "Expo", "Art", date, "Nice", null);
+        Evenement event = new Evenement(3L, "Expo", "Art", date, "Nice", null, null);
         when(evenementService.rechercherParDate(date)).thenReturn(List.of(event));
 
         ResponseEntity<List<EvenementDTO>> response = evenementController.rechercherParDate(dateStr);
@@ -90,7 +90,7 @@ class EvenementControllerTest {
     @Test
     void rechercherParLieu_shouldReturnMatchingEvents() {
         String lieu = "Toulouse";
-        Evenement event = new Evenement(4L, "Salon", "Tech", LocalDate.now(), lieu, null);
+        Evenement event = new Evenement(4L, "Salon", "Tech", LocalDate.now(), lieu, null, null);
         when(evenementService.rechercherParLieu(lieu)).thenReturn(List.of(event));
 
         ResponseEntity<List<EvenementDTO>> response = evenementController.rechercherParLieu(lieu);
