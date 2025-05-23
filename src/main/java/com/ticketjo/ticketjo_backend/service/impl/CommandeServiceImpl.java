@@ -21,9 +21,9 @@ public class CommandeServiceImpl implements CommandeService {
 
 	@Override
 	public Commande creerCommande(Commande commande) {
-		return commandeRepository.save(commande);
+	    commande.setStatutCommande(StatutCommande.EN_ATTENTE); // tu forces EN_ATTENTE ici
+	    return commandeRepository.save(commande);
 	}
-
 	@Override
 	public List<Commande> listerCommandesUtilisateur(Long idUtilisateur) {
 		return commandeRepository.findByUtilisateur_IdUtilisateur(idUtilisateur);

@@ -4,6 +4,7 @@ package com.ticketjo.ticketjo_backend.controller;
 import com.ticketjo.ticketjo_backend.dto.CommandeDTO;
 import com.ticketjo.ticketjo_backend.mapper.CommandeMapper;
 import com.ticketjo.ticketjo_backend.model.Commande;
+import com.ticketjo.ticketjo_backend.model.Utilisateur;
 import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
 import com.ticketjo.ticketjo_backend.service.CommandeService;
 import org.junit.jupiter.api.BeforeEach;
@@ -39,19 +40,24 @@ class CommandeControllerTest {
         // Préparation du DTO d'entrée
         CommandeDTO dto = new CommandeDTO();
         dto.setDateCommande(LocalDate.now());
-        // on passe l'enum, pas une String
-        dto.setStatut(StatutCommande.EN_ATTENTE_VALIDATION);
+        dto.setStatut(StatutCommande.EN_ATTENTE); // Ne sera pas utilisé, mais on le met pour le test
         dto.setTotalCommande(150.0);
+        dto.setIdUtilisateur(42L); // nouveau champ à tester
         dto.setTickets(Collections.emptyList());
 
         // Conversion en entité et simulation du service
         Commande toCreate = CommandeMapper.toEntity(dto);
+
+        // Le service impose EN_ATTENTE quoi qu'on passe
         Commande created = new Commande();
         created.setIdCommande(100L);
         created.setDateCommande(toCreate.getDateCommande());
-        // idem ici
-        created.setStatutCommande(StatutCommande.EN_ATTENTE_VALIDATION);
+        created.setStatutCommande(StatutCommande.EN_ATTENTE); // forcé dans le service
         created.setTotalCommande(toCreate.getTotalCommande());
+        Utilisateur fakeUser = new Utilisateur();
+        fakeUser.setIdUtilisateur(42L);
+        created.setUtilisateur(fakeUser);
+
         when(commandeService.creerCommande(any(Commande.class))).thenReturn(created);
 
         // Appel du contrôleur
@@ -61,9 +67,9 @@ class CommandeControllerTest {
         assertEquals(201, response.getStatusCodeValue());
         assertNotNull(response.getBody());
         assertEquals(100L, response.getBody().getIdCommande());
-        // on compare des enums
-        assertEquals(StatutCommande.EN_ATTENTE_VALIDATION, response.getBody().getStatut());
+        assertEquals(StatutCommande.EN_ATTENTE, response.getBody().getStatut()); // Vérifie bien la valeur imposée
         assertEquals(150.0, response.getBody().getTotalCommande());
+        assertEquals(42L, response.getBody().getIdUtilisateur());
     }
 
     @Test

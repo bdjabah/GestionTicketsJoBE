@@ -39,13 +39,13 @@ class CommandeServiceImplTest {
 
     @Test
     void testCreerCommande() {
-        when(commandeRepository.save(commande)).thenReturn(commande);
+        when(commandeRepository.save(any(Commande.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         Commande result = commandeService.creerCommande(commande);
 
         assertNotNull(result);
-        assertEquals(StatutCommande.TERMINEE, result.getStatutCommande());
-        verify(commandeRepository).save(commande);
+        assertEquals(StatutCommande.EN_ATTENTE, result.getStatutCommande()); // <- la vraie vie
+        verify(commandeRepository).save(any(Commande.class));
     }
 
     @Test

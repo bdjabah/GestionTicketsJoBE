@@ -33,7 +33,7 @@ public class PaiementMapper {
 
         Paiement paiement = new Paiement();
         paiement.setIdPaiement(dto.getIdPaiement());
-        paiement.setStatut(StatutPaiement.valueOf(dto.getStatut()));
+        paiement.setStatut(StatutPaiement.valueOf(dto.getStatut().toUpperCase()));
         paiement.setMontantPaiement(dto.getMontant());
         paiement.setDatePaiement(dto.getDatePaiement());
         paiement.setMethodePaiement(dto.getMethodePaiement());

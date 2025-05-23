@@ -42,21 +42,22 @@ public class StripeService {
      * @return Le PaymentIntent Stripe contenant le clientSecret
      * @throws StripeException En cas de problème de communication avec Stripe
      */
-    public PaymentIntent createPaymentIntent(Double amount) throws StripeException {
+    public PaymentIntent createPaymentIntent(Double amount, Long commandeId) throws StripeException {
         // Sécurité : on s'assure que le montant est bien positif
         if (amount == null || amount <= 0) {
             throw new IllegalArgumentException("Le montant doit être supérieur à zéro.");
         }
-
+       
         // Stripe exige un montant en centimes, donc on convertit en long
         long amountInCents = (long) (amount * 100);
 
         // On construit les paramètres nécessaires pour créer le PaymentIntent
         PaymentIntentCreateParams params = PaymentIntentCreateParams.builder()
-            .setAmount(amountInCents)
-            .setCurrency(stripeProperties.getCurrency()) // Exemple : "eur"
-            .addPaymentMethodType("card")
-            .build();
+        	    .setAmount(amountInCents)
+        	    .setCurrency(stripeProperties.getCurrency())
+        	    .addPaymentMethodType("card")
+        	    .putMetadata("commandeId", String.valueOf(commandeId)) // ← le lien sacré
+        	    .build();
 
         // On envoie la requête à Stripe
         PaymentIntent intent = PaymentIntent.create(params);

@@ -21,6 +21,5 @@ public interface PaiementService {
     void marquerPaiementEchoue(String paymentIntentId);
     
     Paiement trouverParIntentId(String intentId);
-    
-    
+
 }

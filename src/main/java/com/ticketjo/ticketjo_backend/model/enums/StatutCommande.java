@@ -4,7 +4,7 @@ public enum StatutCommande {
 	EN_COURS,
     TERMINEE,
     ANNULEE,
-    EN_ATTENTE_VALIDATION,
+    EN_ATTENTE,
     EN_PREPARATION
 }
 

@@ -1,28 +1,38 @@
 package com.ticketjo.ticketjo_backend.controller;
+
+import com.ticketjo.ticketjo_backend.config.StripeProperties;
 import com.ticketjo.ticketjo_backend.dto.PaiementDTO;
-import com.ticketjo.ticketjo_backend.mapper.PaiementMapper;
+import com.ticketjo.ticketjo_backend.model.Commande;
 import com.ticketjo.ticketjo_backend.model.Paiement;
 import com.ticketjo.ticketjo_backend.model.enums.StatutPaiement;
+import com.ticketjo.ticketjo_backend.repository.CommandeRepository;
 import com.ticketjo.ticketjo_backend.service.PaiementService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpStatus;
+import org.mockito.*;
 import org.springframework.http.ResponseEntity;
 
+import java.io.BufferedReader;
+import java.io.StringReader;
 import java.time.LocalDate;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 class PaiementControllerTest {
 
     @Mock
     private PaiementService paiementService;
+
+    @Mock
+    private StripeProperties stripeProperties;
+
+    @Mock
+    private CommandeRepository commandeRepository;
 
     @InjectMocks
     private PaiementController paiementController;
@@ -33,81 +43,142 @@ class PaiementControllerTest {
     }
 
     @Test
-    void creerPaiement_shouldReturnCreated() {
+    void creerPaiement_shouldReturnCreatedPaiement() {
+        // Préparation du DTO
         PaiementDTO dto = new PaiementDTO();
-        dto.setStatut("VALIDE");
+        dto.setStatut(StatutPaiement.EN_ATTENTE.name());
         dto.setMontant(100.0);
-        dto.setDatePaiement(LocalDate.now());
-        dto.setMethodePaiement("CB");
+        dto.setDatePaiement(LocalDate.of(2025, 5, 1));
+        dto.setMethodePaiement("Carte");
         dto.setIdCommande(1L);
+        dto.setPaymentIntentId("pi_123");
 
-        Paiement paiement = PaiementMapper.toEntity(dto);
-        Paiement saved = paiement;
-        saved.setIdPaiement(99L);
+        // Stub du repository de Commande
+        Commande commande = new Commande();
+        commande.setIdCommande(1L);
+        when(commandeRepository.findById(1L)).thenReturn(Optional.of(commande));
 
-        when(paiementService.creerPaiement(any())).thenReturn(saved);
+        // Stub du service
+        Paiement saved = new Paiement();
+        saved.setIdPaiement(10L);
+        saved.setStatut(StatutPaiement.EN_ATTENTE);
+        saved.setMontantPaiement(100.0);
+        saved.setDatePaiement(dto.getDatePaiement());
+        saved.setMethodePaiement("Carte");
+        saved.setCommande(commande);
+        saved.setPaymentIntentId("pi_123");
+        when(paiementService.creerPaiement(any(Paiement.class))).thenReturn(saved);
 
+        // Exécution
         ResponseEntity<PaiementDTO> response = paiementController.creerPaiement(dto);
 
-        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        // Vérifications
+        assertEquals(201, response.getStatusCodeValue());
         assertNotNull(response.getBody());
-        assertEquals("VALIDE", response.getBody().getStatut());
-        verify(paiementService, times(1)).creerPaiement(any());
+        assertEquals(10L, response.getBody().getIdPaiement());
+        assertEquals(StatutPaiement.EN_ATTENTE.name(), response.getBody().getStatut());
+        assertEquals(100.0, response.getBody().getMontant());
+        assertEquals("Carte", response.getBody().getMethodePaiement());
+        assertEquals(1L, response.getBody().getIdCommande());
+        assertEquals("pi_123", response.getBody().getPaymentIntentId());
     }
 
     @Test
-    void trouverParCommande_shouldReturnPaymentIfFound() {
-        Paiement paiement = new Paiement();
-        paiement.setIdPaiement(42L);
-        paiement.setMontantPaiement(200.0);
-        paiement.setStatut(StatutPaiement.EN_ATTENTE);
+    void trouverParCommande_found() {
+        Long idCommande = 2L;
+        Paiement p = new Paiement();
+        p.setIdPaiement(20L);
+        p.setStatut(StatutPaiement.VALIDE);
+        p.setMontantPaiement(50.0);
+        p.setDatePaiement(LocalDate.of(2025, 5, 2));
+        when(paiementService.trouverParCommande(idCommande)).thenReturn(p);
 
-        when(paiementService.trouverParCommande(1L)).thenReturn(paiement);
+        ResponseEntity<PaiementDTO> response = paiementController.trouverParCommande(idCommande);
 
-        ResponseEntity<PaiementDTO> response = paiementController.trouverParCommande(1L);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatusCodeValue());
         assertNotNull(response.getBody());
-        assertEquals(200.0, response.getBody().getMontant());
+        assertEquals(20L, response.getBody().getIdPaiement());
+        assertEquals(StatutPaiement.VALIDE.name(), response.getBody().getStatut());
     }
 
     @Test
-    void trouverParCommande_shouldReturnNotFoundIfMissing() {
-        when(paiementService.trouverParCommande(1L)).thenReturn(null);
+    void trouverParCommande_notFound() {
+        when(paiementService.trouverParCommande(anyLong())).thenReturn(null);
 
-        ResponseEntity<PaiementDTO> response = paiementController.trouverParCommande(1L);
+        ResponseEntity<PaiementDTO> response = paiementController.trouverParCommande(99L);
 
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals(404, response.getStatusCodeValue());
         assertNull(response.getBody());
     }
 
     @Test
     void listerPaiementsParStatut_shouldReturnList() {
-        Paiement paiement = new Paiement();
-        paiement.setStatut(StatutPaiement.VALIDE);
-        paiement.setMontantPaiement(150.0);
+        StatutPaiement statut = StatutPaiement.ECHOUE;
+        Paiement p = new Paiement();
+        p.setIdPaiement(30L);
+        p.setStatut(statut);
+        p.setMontantPaiement(25.0);
+        p.setDatePaiement(LocalDate.of(2025, 5, 3));
+        when(paiementService.listerPaiementsParStatut(statut)).thenReturn(List.of(p));
 
-        when(paiementService.listerPaiementsParStatut(StatutPaiement.VALIDE))
-                .thenReturn(List.of(paiement));
+        ResponseEntity<List<PaiementDTO>> response = paiementController.listerPaiementsParStatut(statut);
 
-        ResponseEntity<List<PaiementDTO>> response = paiementController.listerPaiementsParStatut(StatutPaiement.VALIDE);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(1, response.getBody().size());
+        assertEquals(statut.name(), response.getBody().get(0).getStatut());
     }
 
     @Test
     void listerPaiementsUtilisateur_shouldReturnList() {
-        Paiement paiement = new Paiement();
-        paiement.setMontantPaiement(99.9);
-        paiement.setStatut(StatutPaiement.EN_ATTENTE);
+        Long idUtilisateur = 5L;
+        Paiement p = new Paiement();
+        p.setIdPaiement(40L);
+        p.setStatut(StatutPaiement.VALIDE);
+        p.setMontantPaiement(75.0);
+        when(paiementService.listerPaiementsUtilisateur(idUtilisateur)).thenReturn(List.of(p));
 
-        when(paiementService.listerPaiementsUtilisateur(123L))
-                .thenReturn(Collections.singletonList(paiement));
+        ResponseEntity<List<PaiementDTO>> response = paiementController.listerPaiementsUtilisateur(idUtilisateur);
 
-        ResponseEntity<List<PaiementDTO>> response = paiementController.listerPaiementsUtilisateur(123L);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(200, response.getStatusCodeValue());
         assertEquals(1, response.getBody().size());
+        assertEquals(40L, response.getBody().get(0).getIdPaiement());
+    }
+
+    @Test
+    void getPaiementByIntentId_found() {
+        String intentId = "pi_456";
+        Paiement p = new Paiement();
+        p.setIdPaiement(50L);
+        p.setPaymentIntentId(intentId);
+        p.setStatut(StatutPaiement.VALIDE);
+        when(paiementService.trouverParIntentId(intentId)).thenReturn(p);
+
+        ResponseEntity<PaiementDTO> response = paiementController.getPaiementByIntentId(intentId);
+
+        assertEquals(200, response.getStatusCodeValue());
+        assertEquals(50L, response.getBody().getIdPaiement());
+        assertEquals(intentId, response.getBody().getPaymentIntentId());
+    }
+
+    @Test
+    void getPaiementByIntentId_notFound() {
+        when(paiementService.trouverParIntentId(anyString())).thenReturn(null);
+
+        ResponseEntity<PaiementDTO> response = paiementController.getPaiementByIntentId("inexistant");
+
+        assertEquals(404, response.getStatusCodeValue());
+        assertNull(response.getBody());
+    }
+
+    @Test
+    void handleStripeWebhook_noSignature_shouldReturnBadRequest() throws Exception {
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        when(req.getHeader("Stripe-Signature")).thenReturn(null);
+        when(req.getReader()).thenReturn(new BufferedReader(new StringReader("payload")));
+
+        ResponseEntity<String> response = paiementController.handleStripeWebhook(req);
+
+        assertEquals(400, response.getStatusCodeValue());
+        assertEquals("Signature header manquant", response.getBody());
     }
 }

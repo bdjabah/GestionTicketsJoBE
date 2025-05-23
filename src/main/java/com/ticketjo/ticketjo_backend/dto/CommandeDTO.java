@@ -22,6 +22,9 @@ public class CommandeDTO {
 	@PastOrPresent(message = "La date de commande ne peut pas être dans le futur")
 	private LocalDate dateCommande;
 	
+	private Long idUtilisateur;
+
+
 	@NotNull(message = "Le statut de la commande est obligatoire")
     @Size(min = 3, max = 50, message = "Le statut doit contenir entre 3 et 50 caractères")
 	private StatutCommande statut;
@@ -48,16 +51,12 @@ public class CommandeDTO {
 	public void setDateCommande(LocalDate dateCommande) {
 		this.dateCommande = dateCommande;
 	}
-
-	public StatutCommande getStatut() {
-		return statut;
-	}
-
 	public void setStatut(StatutCommande statut) {
 		this.statut = statut;
 	}
-
-
+	public StatutCommande getStatut() {
+		return statut;
+	}
 	public Double getTotalCommande() {
 		return totalCommande;
 	}
@@ -72,5 +71,12 @@ public class CommandeDTO {
 
 	public void setTickets(List<TicketDTO> tickets) {
 		this.tickets = tickets;
+	}
+	public Long getIdUtilisateur() {
+		return idUtilisateur;
+	}
+
+	public void setIdUtilisateur(Long idUtilisateur) {
+		this.idUtilisateur = idUtilisateur;
 	}
 }

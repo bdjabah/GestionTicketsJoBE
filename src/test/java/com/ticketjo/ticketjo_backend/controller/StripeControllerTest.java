@@ -2,6 +2,7 @@ package com.ticketjo.ticketjo_backend.controller;
 import com.stripe.exception.StripeException;
 import com.stripe.model.PaymentIntent;
 import com.ticketjo.ticketjo_backend.service.StripeService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,9 +16,12 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+;
+
+
 
 /**
- * ✅ Tests unitaires du StripeController
+ * Tests unitaires du StripeController
  * - simulateur de paiement réussi
  * - erreur Stripe (serveur)
  * - erreur utilisateur (mauvaise donnée)
@@ -38,12 +42,17 @@ class StripeControllerTest {
     @Test
     void createPaymentIntent_shouldReturnClientSecret_onSuccess() throws Exception {
         // GIVEN
+        double montant = 42.50;
+        long commandeId = 123L;
+
         PaymentIntent mockIntent = new PaymentIntent();
         mockIntent.setClientSecret("secret_123");
-        when(stripeService.createPaymentIntent(42.50)).thenReturn(mockIntent);
+
+        when(stripeService.createPaymentIntent(montant, commandeId)).thenReturn(mockIntent);
 
         Map<String, Object> request = new HashMap<>();
-        request.put("amount", 42.50);
+        request.put("amount", montant);
+        request.put("commandeId", commandeId);
 
         // WHEN
         ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
@@ -52,17 +61,18 @@ class StripeControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertEquals("secret_123", response.getBody().get("clientSecret"));
-        verify(stripeService).createPaymentIntent(42.50);
+        verify(stripeService).createPaymentIntent(montant, commandeId);
     }
 
     @Test
     void createPaymentIntent_shouldReturn500_onStripeException() throws Exception {
         // GIVEN
-        when(stripeService.createPaymentIntent(anyDouble()))
+        when(stripeService.createPaymentIntent(anyDouble(), anyLong()))
                 .thenThrow(mock(StripeException.class));
 
         Map<String, Object> request = new HashMap<>();
-        request.put("amount", 10);
+        request.put("amount", 10.0);
+        request.put("commandeId", 77L);
 
         // WHEN
         ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
@@ -78,6 +88,23 @@ class StripeControllerTest {
         // GIVEN
         Map<String, Object> request = new HashMap<>();
         request.put("amount", "pas un nombre");
+        request.put("commandeId", 55L);
+
+        // WHEN
+        ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
+
+        // THEN
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().get("error").startsWith("Données invalides"));
+    }
+
+    @Test
+    void createPaymentIntent_shouldReturn400_onMissingCommandeId() {
+        // GIVEN
+        Map<String, Object> request = new HashMap<>();
+        request.put("amount", 10.0);
+        // commandeId manquant
 
         // WHEN
         ResponseEntity<Map<String, String>> response = stripeController.createPaymentIntent(request);
