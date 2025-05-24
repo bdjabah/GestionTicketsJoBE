@@ -177,9 +177,9 @@
 				<groupId>org.flywaydb</groupId>
 				<artifactId>flyway-maven-plugin</artifactId>
 				<configuration>
-					<url>jdbc:postgresql://localhost:5432/ticketjo_bd</url>
-					<user>fatou</user>
-					<password>fatou123</password>
+					<url>${JDBC_DATABASE_URL}</url>
+					<user>${JDBC_DATABASE_USERNAME}</user>
+					<password>${JDBC_DATABASE_PASSWORD}</password>
 				</configuration>
 			</plugin>
 
