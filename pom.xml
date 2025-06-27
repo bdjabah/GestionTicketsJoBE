@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.4.4</version>
+		<version>3.4.6</version>
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.ticketjo</groupId>
@@ -85,6 +85,16 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
+		  <groupId>me.paulschwarz</groupId>
+		  <artifactId>spring-dotenv</artifactId>
+		  <version>3.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.security</groupId>
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
@@ -115,8 +125,11 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-
-
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>2.2.0</version> <!-- ou version stable récente -->
+		</dependency>
 		<!-- Lib JWT (JSON Web Token) - API -->
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>

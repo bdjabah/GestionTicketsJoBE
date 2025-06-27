@@ -11,6 +11,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -31,7 +32,11 @@ public class Paiement {
     private LocalDate datePaiement;
     private String methodePaiement;
     private String paymentIntentId; // Permet de relier Stripe à
-  
+    
+    @ManyToOne
+    @JoinColumn(name = "utilisateurId", nullable = false)
+    private Utilisateur utilisateur;
+    
     @OneToOne
     @JoinColumn(name = "commandeId")
     private Commande commande;

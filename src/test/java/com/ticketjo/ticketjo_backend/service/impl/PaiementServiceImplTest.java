@@ -5,6 +5,7 @@ import com.ticketjo.ticketjo_backend.model.Paiement;
 import com.ticketjo.ticketjo_backend.model.enums.StatutPaiement;
 import com.ticketjo.ticketjo_backend.repository.CommandeRepository;
 import com.ticketjo.ticketjo_backend.repository.PaiementRepository;
+import com.ticketjo.ticketjo_backend.model.Utilisateur;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,11 +33,16 @@ class PaiementServiceImplTest {
 
     private Paiement paiement;
     private Commande commande;
+    private Utilisateur utilisateur;
 
     @BeforeEach
     void setUp() {
+        utilisateur = new Utilisateur();
+        utilisateur.setIdUtilisateur(42L);
+
         commande = new Commande();
         commande.setIdCommande(1L);
+        commande.setUtilisateur(utilisateur);
 
         paiement = new Paiement();
         paiement.setCommande(commande);
@@ -44,17 +50,18 @@ class PaiementServiceImplTest {
         paiement.setStatut(StatutPaiement.VALIDE);
     }
 
-    @Test
     void testCreerPaiement() {
-        when(paiementRepository.save(paiement)).thenReturn(paiement);
+        when(commandeRepository.findById(1L)).thenReturn(Optional.of(commande));
+        when(paiementRepository.save(any(Paiement.class))).thenAnswer(i -> i.getArgument(0));
 
         Paiement result = paiementService.creerPaiement(paiement);
 
         assertNotNull(result);
         assertEquals(150.0, result.getMontantPaiement());
-        verify(paiementRepository).save(paiement);
+        assertEquals(commande, result.getCommande());
+        assertEquals(utilisateur, result.getUtilisateur());
+        verify(paiementRepository).save(any(Paiement.class));
     }
-
     @Test
     void testTrouverParCommande_WhenCommandeExists() {
         when(commandeRepository.findById(1L)).thenReturn(Optional.of(commande));

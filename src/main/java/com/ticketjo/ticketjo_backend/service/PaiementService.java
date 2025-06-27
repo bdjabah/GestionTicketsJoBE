@@ -20,6 +20,8 @@ public interface PaiementService {
 
     void marquerPaiementEchoue(String paymentIntentId);
     
-    Paiement trouverParIntentId(String intentId);
+    Paiement trouverParIntentId(String intentId);// Trouver un paiement par PaymentIntent ID
+    
+    Paiement mettreAJourPaiement(Paiement paiement); // Mettre à jour un paiement existant
 
 }

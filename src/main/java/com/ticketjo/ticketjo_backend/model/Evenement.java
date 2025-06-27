@@ -4,16 +4,12 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import java.util.List;
 import java.time.LocalDate;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data // génère getters, setters, toString, equals, hashCode
 @NoArgsConstructor // constructeur vide
-@AllArgsConstructor // constructeur avec tous les champs
 @Entity
 public class Evenement {
 
@@ -27,9 +23,6 @@ public class Evenement {
     private String lieuEvenement;
     private String descriptionEvenement;
     private String imageUrl; // ✅ nouveau champ pour l'image
-
-    @OneToMany(mappedBy = "evenement")
-    private List<Ticket> tickets;
 
     // Constructeur sans la liste de tickets
     public Evenement(Long idEvenement, String nomEvenement, String discipline, LocalDate dateEvenement,

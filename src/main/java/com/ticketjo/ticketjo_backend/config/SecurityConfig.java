@@ -37,9 +37,9 @@ public class SecurityConfig {
         CorsConfiguration cfg = new CorsConfiguration();
         // En DEV : autoriser localhost:5173 "http://localhost:5173",
         // En PROD : fbah-ticketjo.fr et www.fbah-ticketjo.fr
-        cfg.setAllowedOriginPatterns(List.of( "https://fbah-ticketjo.fr", "https://www.fbah-ticketjo.fr" ));
+        cfg.setAllowedOriginPatterns(List.of( "https://fbah-ticketjo.fr", "https://www.fbah-ticketjo.fr","http://localhost:8080","http://localhost:5173" ));
         // En dev, possible faire cfg.addAllowedOriginPattern("*");  
-        cfg.setAllowedOrigins(List.of("https://fbah-ticketjo.fr", "https://www.fbah-ticketjo.fr"));
+       // cfg.setAllowedOriginPatterns(List.of("https://fbah-ticketjo.fr", "https://www.fbah-ticketjo.fr"));
         cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
@@ -56,30 +56,58 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // 2) Désactive CSRF, passe en stateless, règle les accès
             .csrf(csrf -> csrf.disable())
+           
             .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                // Routes publiques
-                .requestMatchers(
-                	"/oauth2/**",
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/swagger-resources/**",
-                    "/swagger-ui.html",
-                    "/webjars/**",
-                    "/uploads/**",
-                    "/api/auth/**",
-                    "/api/stripe/**", 
-                    "/"
-                ).permitAll()
-                // Rôles spécifiques
-                .requestMatchers("/api/roles/**").hasRole("ADMIN")
-                .requestMatchers("/api/evenements/upload").hasRole("ADMIN")
-                .requestMatchers("/api/evenements/**").hasRole("ADMIN")
-                // Autorise les pré‐vols CORS
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                // Tout le reste requiert authentification
-                .anyRequest().authenticated()
-            )
+                    // 🔓 Swagger - PUBLIC
+                    .requestMatchers(
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**"
+                    ).permitAll()
+
+                    // 🔓 Auth et Stripe - PUBLIC
+                    .requestMatchers(
+                        "/oauth2/**",
+                        "/api/auth/**",
+                        "/api/stripe/**",
+                        "/uploads/**",
+                        "/"
+                    ).permitAll()
+                    // === MODIFICATION : autoriser tous les GET sur evenements ===
+                    .requestMatchers(HttpMethod.GET, "/api/evenements/**")
+                        .permitAll()
+
+                    // === MODIFICATION : protéger la création d'événements (upload + POST) ===
+                    .requestMatchers(HttpMethod.POST, "/api/evenements", "/api/evenements/upload")
+                        .hasRole("ADMIN")
+
+                    // === MODIFICATION : protéger la mise à jour d'événements ===
+                    .requestMatchers(HttpMethod.PUT, "/api/evenements/**")
+                        .hasRole("ADMIN")
+
+                    // === MODIFICATION : protéger la suppression d'événements ===
+                    .requestMatchers(HttpMethod.DELETE, "/api/evenements/**")
+                        .hasRole("ADMIN")
+
+                    // Rôles spécifiques (autres routes métier)
+                    .requestMatchers("/api/roles/**").hasRole("ADMIN")
+
+                    // Pré‐vols CORS
+                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                  // Public : lecture pour tous
+                    .requestMatchers(HttpMethod.GET, "/api/tickets/**").permitAll()
+
+                    // Restreint : modifications pour ADMIN uniquement
+                    .requestMatchers(HttpMethod.POST, "/api/tickets").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.PUT, "/api/tickets/**").hasRole("ADMIN")
+                    .requestMatchers(HttpMethod.DELETE, "/api/tickets/**").hasRole("ADMIN")
+                    // Tout le reste nécessite authentification (JWT / OAuth2)
+                    .anyRequest().authenticated()
+                )
+            
             // 3) Authentification par DAO + BCrypt
             .authenticationProvider(authenticationProvider())
             // 4) Filtre JWT

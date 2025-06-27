@@ -9,29 +9,21 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class TicketDTO {
+public class TicketCatalogueDTO {
 
 	private Long idTicket;
+	
+	@NotNull(message = "Le prix du ticket est obligatoire")
 	private Double prixTicket;
+	
+	@NotNull(message = "Le stock est obligatoire")
 	private Integer stock;
-
-	@NotBlank(message = "La clé du ticket est obligatoire")
-	@Size(min = 10, max = 100)
-	private String cleTicket;
-
-	@NotBlank(message = "Le QR code est obligatoire")
-	private String qrCode;
 
 	@NotBlank(message = "Le type de ticket est obligatoire")
 	private String typeTicket;
-
-	private String statutTicket;
-
-	@NotNull(message = "L'identifiant de la commande est obligatoire")
-	private Long idCommande;
-
-	@NotNull(message = "L'identifiant de l'événement est obligatoire")
-	private Long idEvenement;
+	
+	@NotNull(message = "La capacité est obligatoire")
+	private Integer capacite; 
 
 	@Size(max = 255)
 	@Pattern(regexp = "^(https?://.*|/.*)?$")
@@ -63,21 +55,6 @@ public class TicketDTO {
 		this.stock = stock;
 	}
 
-	public String getCleTicket() {
-		return cleTicket;
-	}
-
-	public void setCleTicket(String cleTicket) {
-		this.cleTicket = cleTicket;
-	}
-
-	public String getQrCode() {
-		return qrCode;
-	}
-
-	public void setQrCode(String qrCode) {
-		this.qrCode = qrCode;
-	}
 
 	public String getTypeTicket() {
 		return typeTicket;
@@ -87,28 +64,12 @@ public class TicketDTO {
 		this.typeTicket = typeTicket;
 	}
 
-	public String getStatutTicket() {
-		return statutTicket;
+	public Integer getCapacite() {
+		return capacite;
 	}
 
-	public void setStatutTicket(String statutTicket) {
-		this.statutTicket = statutTicket;
-	}
-
-	public Long getIdCommande() {
-		return idCommande;
-	}
-
-	public void setIdCommande(Long idCommande) {
-		this.idCommande = idCommande;
-	}
-
-	public Long getIdEvenement() {
-		return idEvenement;
-	}
-
-	public void setIdEvenement(Long idEvenement) {
-		this.idEvenement = idEvenement;
+	public void setCapacite(Integer capacite) {
+		this.capacite = capacite;
 	}
 
 	public String getImageTicket() {
@@ -118,4 +79,9 @@ public class TicketDTO {
 	public void setImageTicket(String imageTicket) {
 		this.imageTicket = imageTicket;
 	}
+	
+	// Calcul dynamique du statut dans le DTO
+		public String getStatutTicket() {
+			return stock != null && stock > 0 ? "DISPONIBLE" : "EPUISE";
+		}
 }

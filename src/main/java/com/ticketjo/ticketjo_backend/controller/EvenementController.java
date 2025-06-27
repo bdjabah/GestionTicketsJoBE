@@ -1,6 +1,5 @@
 package com.ticketjo.ticketjo_backend.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ticketjo.ticketjo_backend.dto.EvenementDTO;
 import com.ticketjo.ticketjo_backend.mapper.EvenementMapper;
 import com.ticketjo.ticketjo_backend.model.Evenement;
@@ -34,7 +33,6 @@ public class EvenementController {
 
     private final EvenementService evenementService;
     private final FileStorageService fileStorageService;
-    private final ObjectMapper objectMapper;
 
     /**
      * Crée un nouvel événement.
@@ -146,55 +144,26 @@ public class EvenementController {
     		  consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     		)
     		public ResponseEntity<EvenementDTO> createWithUpload(
-    		    @RequestPart("evenement") @Valid EvenementDTO dto,
+    			@ModelAttribute @Valid EvenementDTO dto,
     		    @RequestPart(value = "image", required = false) MultipartFile image
     		) {
     		    // Si vous voulez logger les erreurs de validation, vous pouvez capturer BindingResult
     		    // et renvoyer les messages détaillés.
 
-    		    // 📸 Sauvegarde de l’image si présente
+    		    //  Sauvegarde de l’image si présente
     		    if (image != null && !image.isEmpty()) {
     		        String imageUrl = fileStorageService.storeFile(image);
     		        dto.setImageUrl(imageUrl);
     		    }
 
-    		    // 🛠 Création de l’entité et persistance
+    		    //  Création de l’entité et persistance
     		    Evenement saved = evenementService.creerEvenement(EvenementMapper.toEntity(dto));
 
-    		    // 🔙 Retour DTO + 201 Created
+    		    //  Retour DTO + 201 Created
     		    return ResponseEntity
     		            .status(HttpStatus.CREATED)
     		            .body(EvenementMapper.toDTO(saved));
     		}
-
-//    /**
-//     * Upload d’un fichier image lié à un événement.
-//     *
-//     * @param file Fichier envoyé par formulaire (champ "file").
-//     * @return Le nom du fichier enregistré.
-//     */
-//    @PostMapping("/upload")
-//    public ResponseEntity<EvenementDTO> createWithUpload(
-//            @RequestPart("evenement") String evenementJson,
-//            @RequestPart(value = "image", required = false) MultipartFile image) {
-//        try {
-//            // 🧩 Convertir le JSON en DTO Java
-//            EvenementDTO dto = objectMapper.readValue(evenementJson, EvenementDTO.class);
-//
-//            // 📸 Sauvegarder l'image si présente
-//            if (image != null && !image.isEmpty()) {
-//                String imageUrl = fileStorageService.storeFile(image);
-//                dto.setImageUrl(imageUrl);
-//            }
-//
-//            // 🛠 Créer l'entité
-//            Evenement created = evenementService.creerEvenement(EvenementMapper.toEntity(dto));
-//            return new ResponseEntity<>(EvenementMapper.toDTO(created), HttpStatus.CREATED);
-//
-//        } catch (Exception e) {
-//            return ResponseEntity.badRequest().build();
-//        }
-//    }
     /**
      * Téléchargement d’un fichier stocké pour un événement.
      *

@@ -23,13 +23,13 @@ import lombok.NoArgsConstructor;
 @Data // génère getters, setters, toString, equals, hashCode
 @NoArgsConstructor // constructeur vide
 @AllArgsConstructor // constructeur avec tous les champs
-
 @Entity
 public class Commande {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long idCommande;
+	
 	private LocalDate dateCommande;
 
 	@Enumerated(EnumType.STRING) // ← syntaxe correcte
@@ -42,10 +42,13 @@ public class Commande {
 	private Utilisateur utilisateur;
 
 	@OneToMany(mappedBy = "commande", cascade = CascadeType.ALL)
-	private List<Ticket> tickets;
+	private List<TicketVendu> ticketsVendus;
 
 	@OneToOne(mappedBy = "commande", cascade = CascadeType.ALL)
 	private Paiement paiement;
+	
+	@OneToMany(mappedBy = "commande", cascade = CascadeType.ALL)
+	private List<TicketCommande> ticketsCommandes;
 
 	// Getters & Setters
 }

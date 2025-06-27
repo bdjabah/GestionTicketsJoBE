@@ -29,8 +29,19 @@ public class PaiementDTO {
 
 	@NotNull(message = "L'identifiant de la commande est obligatoire")
 	private Long idCommande; // pour lier au DTO de Commande si besoin
+	
+	@NotNull(message = "L'identifiant de l'utilisateur est obligatoire")
+	private Long idUtilisateur;
 
-	 private String paymentIntentId; 
+	 public Long getIdUtilisateur() {
+		return idUtilisateur;
+	}
+
+	public void setIdUtilisateur(Long idUtilisateur) {
+		this.idUtilisateur = idUtilisateur;
+	}
+
+	private String paymentIntentId; 
 	// Getters & Setters
 
 	

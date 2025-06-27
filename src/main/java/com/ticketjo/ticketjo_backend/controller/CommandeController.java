@@ -6,6 +6,7 @@ import com.ticketjo.ticketjo_backend.model.Commande;
 import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
 import com.ticketjo.ticketjo_backend.service.CommandeService;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -33,8 +34,7 @@ public class CommandeController {
      */
     @PostMapping
     public ResponseEntity<CommandeDTO> creerCommande(@RequestBody @Valid CommandeDTO commandeDTO) {
-        Commande commande = CommandeMapper.toEntity(commandeDTO);
-        Commande created = commandeService.creerCommande(commande);
+        Commande created = commandeService.creerCommande(commandeDTO);
         return new ResponseEntity<>(CommandeMapper.toDTO(created), HttpStatus.CREATED);
     }
 
@@ -93,11 +93,17 @@ public class CommandeController {
      * @return La commande mise à jour, sous forme de DTO.
      */
     @PutMapping("/{idCommande}/status")
-    public ResponseEntity<CommandeDTO> changerStatut(
+    public ResponseEntity<?> changerStatut(
             @PathVariable Long idCommande,
             @RequestBody StatutCommande nouveauStatut
     ) {
-        Commande updated = commandeService.changerStatut(idCommande, nouveauStatut);
-        return new ResponseEntity<>(CommandeMapper.toDTO(updated), HttpStatus.OK);
+        try {
+            Commande updated = commandeService.changerStatut(idCommande, nouveauStatut);
+            return new ResponseEntity<>(CommandeMapper.toDTO(updated), HttpStatus.OK);
+        } catch (IllegalStateException e) {
+            return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        } catch (EntityNotFoundException e) {
+            return new ResponseEntity<>("Commande introuvable.", HttpStatus.NOT_FOUND);
+        }
     }
 }

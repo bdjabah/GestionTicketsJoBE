@@ -8,7 +8,6 @@ import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.PositiveOrZero;
-import jakarta.validation.constraints.Size;
 
 /**
  * Data Transfer Object (DTO) pour l'entité Commande. Utilisé pour transférer
@@ -18,6 +17,7 @@ import jakarta.validation.constraints.Size;
 public class CommandeDTO {
 
 	private Long idCommande;
+	private List<TicketVenduDTO> ticketsVendus;
 	
 	@PastOrPresent(message = "La date de commande ne peut pas être dans le futur")
 	private LocalDate dateCommande;
@@ -26,14 +26,14 @@ public class CommandeDTO {
 
 
 	@NotNull(message = "Le statut de la commande est obligatoire")
-    @Size(min = 3, max = 50, message = "Le statut doit contenir entre 3 et 50 caractères")
+    //@Size(min = 3, max = 50, message = "Le statut doit contenir entre 3 et 50 caractères")
 	private StatutCommande statut;
 	
 	@PositiveOrZero(message = "Le total de la commande ne peut pas être négatif")
 	private Double totalCommande;
 	
-	private List<TicketDTO> tickets;
-
+	private List<TicketCommandeDTO> tickets;	
+	
 	// Getters & Setters
 
 	public Long getIdCommande() {
@@ -65,18 +65,28 @@ public class CommandeDTO {
 		this.totalCommande = totalCommande;
 	}
 
-	public List<TicketDTO> getTickets() {
-		return tickets;
-	}
 
-	public void setTickets(List<TicketDTO> tickets) {
-		this.tickets = tickets;
-	}
 	public Long getIdUtilisateur() {
 		return idUtilisateur;
 	}
 
 	public void setIdUtilisateur(Long idUtilisateur) {
 		this.idUtilisateur = idUtilisateur;
+	}
+	
+	public List<TicketVenduDTO> getTicketsVendus() {
+	    return ticketsVendus;
+	}
+
+	public void setTicketsVendus(List<TicketVenduDTO> ticketsVendus) {
+	    this.ticketsVendus = ticketsVendus;
+	}
+
+	public List<TicketCommandeDTO> getTickets() {
+		return tickets;
+	}
+
+	public void setTickets(List<TicketCommandeDTO> tickets) {
+		this.tickets = tickets;
 	}
 }

@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.ticketjo.ticketjo_backend.model.Commande;
@@ -27,4 +29,8 @@ public interface CommandeRepository extends JpaRepository<Commande, Long> {
 
     // Pour récupérer toutes les commandes passées entre deux dates
     List<Commande> findAllByDateCommandeBetween(LocalDate debut, LocalDate fin);
+    
+ // Nouvelle méthode pour récupérer la commande avec les ticketsCommandes
+    @Query("SELECT c FROM Commande c LEFT JOIN FETCH c.ticketsCommandes WHERE c.idCommande = :id")
+    Optional<Commande> findByIdWithTickets(@Param("id") Long id);
 }

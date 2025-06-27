@@ -23,5 +23,6 @@ import com.ticketjo.ticketjo_backend.model.enums.StatutPaiement;
 	    List<Paiement> findByCommande_Utilisateur_IdUtilisateur(Long idUtilisateur);
 	    
 	    Paiement findByPaymentIntentId(String paymentIntentId);
+	    
 
 	}

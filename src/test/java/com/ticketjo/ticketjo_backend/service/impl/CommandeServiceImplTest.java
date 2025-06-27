@@ -1,9 +1,9 @@
 package com.ticketjo.ticketjo_backend.service.impl;
 
+import com.ticketjo.ticketjo_backend.dto.CommandeDTO;
 import com.ticketjo.ticketjo_backend.model.Commande;
 import com.ticketjo.ticketjo_backend.model.enums.StatutCommande;
 import com.ticketjo.ticketjo_backend.repository.CommandeRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,33 +26,36 @@ class CommandeServiceImplTest {
     @InjectMocks
     private CommandeServiceImpl commandeService;
 
-    private Commande commande;
-
-    @BeforeEach
-    void setUp() {
-        commande = new Commande();
-        commande.setIdCommande(1L);
-        commande.setDateCommande(LocalDate.now());
-        // on passe l'enum, pas une String
-        commande.setStatutCommande(StatutCommande.TERMINEE);
-    }
-
     @Test
     void testCreerCommande() {
-        when(commandeRepository.save(any(Commande.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        CommandeDTO commandeDTO = new CommandeDTO();
+        commandeDTO.setDateCommande(LocalDate.now());
+        commandeDTO.setTotalCommande(100.0);
+        commandeDTO.setStatut(StatutCommande.EN_ATTENTE);
+        commandeDTO.setIdUtilisateur(null); // pas de user pour ce test
+        commandeDTO.setTickets(List.of()); // pas de billets non plus pour ce test simple
 
-        Commande result = commandeService.creerCommande(commande);
+        // Stub du repository
+        when(commandeRepository.save(any(Commande.class))).thenAnswer(invocation -> {
+            Commande c = invocation.getArgument(0);
+            c.setIdCommande(1L);
+            return c;
+        });
+
+        Commande result = commandeService.creerCommande(commandeDTO);
 
         assertNotNull(result);
-        assertEquals(StatutCommande.EN_ATTENTE, result.getStatutCommande()); // <- la vraie vie
+        assertEquals(1L, result.getIdCommande());
+        assertEquals(StatutCommande.EN_ATTENTE, result.getStatutCommande());
         verify(commandeRepository).save(any(Commande.class));
     }
 
     @Test
     void testListerCommandesUtilisateur() {
         Long idUtilisateur = 2L;
+        Commande commande = new Commande();
         when(commandeRepository.findByUtilisateur_IdUtilisateur(idUtilisateur))
-            .thenReturn(List.of(commande));
+                .thenReturn(List.of(commande));
 
         List<Commande> commandes = commandeService.listerCommandesUtilisateur(idUtilisateur);
 
@@ -63,28 +66,27 @@ class CommandeServiceImplTest {
     @Test
     void testObtenirDerniereCommandeUtilisateur() {
         Long idUtilisateur = 2L;
+        Commande commande = new Commande();
         when(commandeRepository.findTopByUtilisateur_IdUtilisateurOrderByDateCommandeDesc(idUtilisateur))
-            .thenReturn(Optional.of(commande));
+                .thenReturn(Optional.of(commande));
 
         Commande result = commandeService.obtenirDerniereCommandeUtilisateur(idUtilisateur);
 
         assertNotNull(result);
         assertEquals(commande, result);
         verify(commandeRepository)
-            .findTopByUtilisateur_IdUtilisateurOrderByDateCommandeDesc(idUtilisateur);
+                .findTopByUtilisateur_IdUtilisateurOrderByDateCommandeDesc(idUtilisateur);
     }
 
     @Test
     void testListerCommandesParStatut() {
-        // on stubbe le repo avec l'enum
+        Commande commande = new Commande();
         when(commandeRepository.findByStatutCommande(StatutCommande.TERMINEE))
-            .thenReturn(List.of(commande));
+                .thenReturn(List.of(commande));
 
-        // on appelle la méthode service en passant une String (case-insensitive)
         List<Commande> result = commandeService.listerCommandesParStatut("terminee");
 
         assertEquals(1, result.size());
-        // s'assure que l'on a bien converti en StatutCommande.TERMINEE
         verify(commandeRepository).findByStatutCommande(StatutCommande.TERMINEE);
     }
 }

@@ -1,12 +1,9 @@
 package com.ticketjo.ticketjo_backend.model;
 
-
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -16,7 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor // constructeur vide
 @AllArgsConstructor // constructeur avec tous les champs
 @Entity
-public class Ticket {
+public class TicketCatalogue {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,18 +22,13 @@ public class Ticket {
     private String typeTicket;
     private double prixTicket;
     private Integer stock;
-    private String cleTicket;
-    private String qrCode;
-    private String statutTicket;
+    private Integer capacite;
+  
     private String imageTicket;
-
-    @ManyToOne
-    @JoinColumn(name = "commandeId")
-    private Commande commande;
-
-    @ManyToOne
-    @JoinColumn(name = "evenementId")
-    private Evenement evenement;
- // Getters & Setters
+    
+    public String getStatutTicket() {
+    	return this.stock != null && this.stock > 0 ? "DISPONIBLE" : "EPUISE";
+    }
 }
+
     

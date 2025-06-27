@@ -1,6 +1,6 @@
 package com.ticketjo.ticketjo_backend.controller;
+
 import com.ticketjo.ticketjo_backend.dto.RoleDTO;
-import com.ticketjo.ticketjo_backend.mapper.RoleMapper;
 import com.ticketjo.ticketjo_backend.model.Role;
 import com.ticketjo.ticketjo_backend.service.RoleService;
 import org.junit.jupiter.api.BeforeEach;

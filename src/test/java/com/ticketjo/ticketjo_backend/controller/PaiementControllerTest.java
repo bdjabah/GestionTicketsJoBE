@@ -44,7 +44,7 @@ class PaiementControllerTest {
 
     @Test
     void creerPaiement_shouldReturnCreatedPaiement() {
-        // Préparation du DTO
+        // Préparation du DTO envoyé par le frontend
         PaiementDTO dto = new PaiementDTO();
         dto.setStatut(StatutPaiement.EN_ATTENTE.name());
         dto.setMontant(100.0);
@@ -53,36 +53,36 @@ class PaiementControllerTest {
         dto.setIdCommande(1L);
         dto.setPaymentIntentId("pi_123");
 
-        // Stub du repository de Commande
-        Commande commande = new Commande();
-        commande.setIdCommande(1L);
-        when(commandeRepository.findById(1L)).thenReturn(Optional.of(commande));
-
-        // Stub du service
+        // Stub de la méthode creerPaiement du service
         Paiement saved = new Paiement();
         saved.setIdPaiement(10L);
         saved.setStatut(StatutPaiement.EN_ATTENTE);
         saved.setMontantPaiement(100.0);
         saved.setDatePaiement(dto.getDatePaiement());
         saved.setMethodePaiement("Carte");
-        saved.setCommande(commande);
+        // On stubpe une commande minimale
+        Commande commandeStub = new Commande();
+        commandeStub.setIdCommande(1L);
+        saved.setCommande(commandeStub);
         saved.setPaymentIntentId("pi_123");
         when(paiementService.creerPaiement(any(Paiement.class))).thenReturn(saved);
 
-        // Exécution
-        ResponseEntity<PaiementDTO> response = paiementController.creerPaiement(dto);
+        // Exécution de la méthode du controller
+        ResponseEntity<?> response = paiementController.creerPaiement(dto);
 
         // Vérifications
         assertEquals(201, response.getStatusCodeValue());
-        assertNotNull(response.getBody());
-        assertEquals(10L, response.getBody().getIdPaiement());
-        assertEquals(StatutPaiement.EN_ATTENTE.name(), response.getBody().getStatut());
-        assertEquals(100.0, response.getBody().getMontant());
-        assertEquals("Carte", response.getBody().getMethodePaiement());
-        assertEquals(1L, response.getBody().getIdCommande());
-        assertEquals("pi_123", response.getBody().getPaymentIntentId());
-    }
+        assertTrue(response.getBody() instanceof PaiementDTO);
 
+        PaiementDTO body = (PaiementDTO) response.getBody();
+        assertNotNull(body);
+        assertEquals(10L, body.getIdPaiement());
+        assertEquals(StatutPaiement.EN_ATTENTE.name(), body.getStatut());
+        assertEquals(100.0, body.getMontant());
+        assertEquals("Carte", body.getMethodePaiement());
+        assertEquals(1L, body.getIdCommande());
+        assertEquals("pi_123", body.getPaymentIntentId());
+    }
     @Test
     void trouverParCommande_found() {
         Long idCommande = 2L;
